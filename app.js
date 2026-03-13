@@ -3,9 +3,10 @@ require("express-async-errors");
 
 const app = express();
 
+const jobRouter = require("./routes/jobs");
 app.set("view engine", "ejs");
 app.use(require("body-parser").urlencoded({ extended: true }));
-require("dotenv").config(); // to load the .env file into the process.env object
+require("dotenv").config();
 const session = require("express-session");
 const MongoDBStore = require("connect-mongodb-session")(session);
 const cookieParser = require("cookie-parser");
@@ -20,7 +21,6 @@ app.use(xss());
 const url = process.env.MONGO_URI;
 
 const store = new MongoDBStore({
-  // may throw an error, which won't be caught
   uri: url,
   collection: "mySessions",
 });
@@ -37,8 +37,8 @@ const sessionParms = {
 };
 
 if (app.get("env") === "production") {
-  app.set("trust proxy", 1); // trust first proxy
-  sessionParms.cookie.secure = true; // serve secure cookies
+  app.set("trust proxy", 1);
+  sessionParms.cookie.secure = true;
 }
 
 app.use(session(sessionParms));
@@ -50,7 +50,6 @@ app.use(passport.initialize());
 app.use(passport.session());
 app.use(require("connect-flash")());
 app.use(require("./middleware/storeLocals"));
-
 const csrfMiddleware = csrf.csrf();
 app.use(csrfMiddleware);
 app.use((req, res, next) => {
@@ -65,6 +64,7 @@ app.use("/sessions", require("./routes/sessionRoutes"));
 // secret word handling
 const auth = require("./middleware/auth");
 const secretWordRouter = require("./routes/secretWord");
+app.use("/jobs", auth, jobRouter);
 
 app.use("/secretWord", auth, secretWordRouter);
 
